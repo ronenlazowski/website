@@ -92,6 +92,9 @@
         <a href="#home" class="logo no-uri-change"><img src="images/logo.svg" style="display:block;" alt="logo" width="30" height="30"></a>
         <button id="mobile-menu-toggle" aria-label="Toggle Mobile Menu">☰</button>
         <ul class="nav-menu">
+            <li><a href="#about" class="no-uri-change">About</a></li>
+            <li><a href="#projects" class="no-uri-change">Projects</a></li>
+            <br>
             <li><a href="https://discord.gg/8hYZUtUxme" target="_blank" rel="noopener noreferrer">💬 Discord</a></li>
             <li><a href="mailto:me@ronenlaz.com" target="_blank" rel="noopener noreferrer">📧 Email</a></li>
             <li><a href="https://github.com/ronenlazowski" target="_blank" rel="noopener noreferrer">👨‍💻 GitHub</a></li>
@@ -102,13 +105,100 @@
     </div>
 </nav>
 <section id="home">
+    <div class="home-container">
+        <div class="hero-content">
+            <div class="greeting">
+                <span class="wave">👋</span>
+                <span class="intro-text">Hey there, I'm</span>
+            </div>
+            <h1 class="name-title">Ronen Lazowski</h1>
+            <h2 class="role-title">
+                <span class="role-highlight">Python Developer</span> & 
+                <span class="role-highlight">Network Specialist</span>
+            </h2>
+            <p class="hero-description">
+                I craft innovative solutions with Python, specializing in backend development, 
+                automation tools, and scalable systems that solve real-world problems.
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">3+</span>
+                    <span class="stat-label">Years Experience</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">10+</span>
+                    <span class="stat-label">Projects Built</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Passion Driven</span>
+                </div>
+            </div>
+            <div class="cta-buttons">
+                <a href="#about" class="btn btn-primary no-uri-change">
+                    <span>Discover My Journey</span>
+                    <span class="btn-arrow">→</span>
+                </a>
+                <a href="mailto:me@ronenlaz.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                    <span>Get In Touch</span>
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="code-preview">
+                <div class="code-header">
+                    <div class="code-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <span class="code-title">main.py</span>
+                </div>
+                <div class="code-content">
+                    <div class="code-line">
+                        <span class="code-keyword">class</span> <span class="code-class">Developer</span>:
+                    </div>
+                    <div class="code-line">
+                        &nbsp;&nbsp;<span class="code-keyword">def</span> <span class="code-function">__init__</span>(self):
+                    </div>
+                    <div class="code-line">
+                        &nbsp;&nbsp;&nbsp;&nbsp;self.name = <span class="code-string">"Ronen"</span>
+                    </div>
+                    <div class="code-line">
+                        &nbsp;&nbsp;&nbsp;&nbsp;self.skills = [<span class="code-string">"Python"</span>, <span class="code-string">"Backend"</span>]
+                    </div>
+                    <div class="code-line">
+                        &nbsp;&nbsp;&nbsp;&nbsp;self.passion = <span class="code-boolean">True</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="about">
     <div class="section-content">
-        <h1>Ronen Lazowski</h1>
-        <h2>Python Developer & Network Specialist</h2>
-        <p>Crafting innovative solutions with Python, specializing in backend development and automation.</p>
-        <div class="cta-buttons">
-            <a href="#projects" class="btn btn-primary no-uri-change">View Projects</a>
-            <a href="mailto:me@ronenlaz.com" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Email Me</a>
+        <h2>About Me</h2>
+        <div class="about-container">
+            <div class="about-text">
+                <p>I'm a passionate Python developer and network specialist with a focus on creating efficient automation tools and scalable backend systems. My journey in programming started with a curiosity for solving complex problems through code.</p>
+                
+                <p>With expertise in backend development, I enjoy building robust applications that can handle real-world challenges. I love bringing ideas to life through clean, maintainable code.</p>
+                
+                <p>When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or sharing knowledge with fellow developers in the community.</p>
+                
+                <div class="skills">
+                    <h3>Technical Skills</h3>
+                    <div class="skill-tags">
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Backend Development</span>
+                        <span class="skill-tag">Network Engineering</span>
+                        <span class="skill-tag">Automation</span>
+                        <span class="skill-tag">Discord Bots</span>
+                        <span class="skill-tag">Server Managment</span>
+                        <span class="skill-tag">Web Development</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
