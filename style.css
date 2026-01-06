@@ -1032,7 +1032,9 @@ footer{
     padding:1.5rem 2rem;
     flex:1;
     mask-image:linear-gradient(to right,transparent 0%,black 60px,black calc(100% - 60px),transparent 100%);
-    -webkit-mask-image:linear-gradient(to right,transparent 0%,black 60px,black calc(100% - 60px),transparent 100%)
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,black 60px,black calc(100% - 60px),transparent 100%);
+    scroll-behavior:auto;
+    overscroll-behavior-x:contain
 }
 .projects-grid::-webkit-scrollbar{
     display:none
@@ -2520,8 +2522,9 @@ body.light-mode #discord-status-mini:hover{
         gap:0.5rem;
         margin-top:1.5rem;
         overflow:visible;
-        padding:0 1rem;
-        max-width:100%
+        padding:0;
+        max-width:100%;
+        touch-action:pan-y pinch-zoom
     }
     .projects-carousel::before,
     .projects-carousel::after{
@@ -2539,19 +2542,28 @@ body.light-mode #discord-status-mini:hover{
         display:flex;
         flex-direction:row;
         gap:1rem;
-        padding:1rem calc((100vw - 85vw) / 2);
+        padding:1rem 2rem;
         overflow-x:auto;
         overflow-y:hidden;
         -webkit-overflow-scrolling:touch;
         margin:0;
         mask-image:none;
-        -webkit-mask-image:none
+        -webkit-mask-image:none;
+        scroll-behavior:auto;
+        touch-action:pan-x pan-y;
+        overscroll-behavior-x:contain
     }
     .project-item{
         flex:0 0 85vw;
         max-width:320px;
-        min-width:unset;
-        padding:1.5rem
+        min-width:280px;
+        padding:1.5rem;
+        transform:none;
+        transition:transform 0.2s ease, box-shadow 0.2s ease
+    }
+    .project-item:hover{
+        transform:none;
+        box-shadow:0 10px 20px rgba(0,0,0,0.2)
     }
     .project-header{
         flex-direction:column;
@@ -3033,7 +3045,7 @@ body.light-mode #discord-status-mini:hover{
     }
     .projects-carousel{
         flex-direction:column !important;
-        overflow:hidden !important
+        overflow:visible !important
     }
     .carousel-btn{
         display:none !important
@@ -3042,17 +3054,17 @@ body.light-mode #discord-status-mini:hover{
         display:flex !important;
         flex-direction:row !important;
         gap:1rem !important;
-        padding:1rem 0 !important;
+        padding:1rem 1.5rem !important;
         overflow-x:auto !important;
-        scroll-snap-type:x mandatory !important
+        scroll-behavior:auto !important;
+        overscroll-behavior-x:contain !important
     }
     .project-item{
         flex:0 0 85vw !important;
         max-width:300px !important;
         min-width:260px !important;
         padding:1.5rem !important;
-        margin:0 !important;
-        scroll-snap-align:center !important
+        margin:0 !important
     }
     .project-title{
         font-size:1.3rem !important

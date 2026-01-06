@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         formStatus.style.display = 'none';
     }
 
-    // Projects Carousel with Infinite Auto-Rotation
+    // Projects Carousel with Improved Mobile Support
     const projectsGrid = document.querySelector('.projects-grid');
     const prevBtn = document.querySelector('.carousel-btn-prev');
     const nextBtn = document.querySelector('.carousel-btn-next');
@@ -182,19 +182,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // Carousel state
         const AUTOPLAY_DURATION = 5000;
         const PROGRESS_STEP = 50;
-        const ANIMATION_DELAY = 400;
+        const ANIMATION_DURATION = 350;
+        const SWIPE_THRESHOLD = 50;
+        const SWIPE_VELOCITY_THRESHOLD = 0.3;
         
         let currentIndex = 0;
         let progressInterval = null;
         let progress = 0;
         let isPaused = false;
         let isAnimating = false;
+        let isUserInteracting = false;
         
-        // Clone items for infinite scroll - clones before (reversed) and after (in order)
+        // Check if we're on a touch device
+        const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        // Clone items for infinite scroll
         for (let i = totalProjects - 1; i >= 0; i--) {
             const clone = originalItems[i].cloneNode(true);
             clone.classList.add('clone');
             clone.setAttribute('aria-hidden', 'true');
+            clone.removeAttribute('id');
             projectsGrid.insertBefore(clone, projectsGrid.firstChild);
         }
         
@@ -202,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const clone = item.cloneNode(true);
             clone.classList.add('clone');
             clone.setAttribute('aria-hidden', 'true');
+            clone.removeAttribute('id');
             projectsGrid.appendChild(clone);
         });
         
@@ -214,22 +222,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (index === 0) dot.classList.add('active');
             dot.setAttribute('aria-label', `Go to project ${index + 1}`);
             dot.addEventListener('click', () => {
-                goToSlide(index);
-                resetAutoplay();
+                if (!isAnimating) {
+                    goToSlide(index);
+                    resetAutoplay();
+                }
             });
             dotsContainer.appendChild(dot);
         });
         
         const dots = Array.from(dotsContainer.querySelectorAll('.carousel-dot'));
         
-        // Check if we're on mobile
-        function isMobile() {
-            return window.innerWidth <= 768;
-        }
-        
         // Get the scroll position to center a specific original item
         function getScrollPosition(index) {
-            const actualIndex = index + totalProjects; // Account for clones before
+            const actualIndex = index + totalProjects;
             const item = allItems[actualIndex];
             if (!item) return 0;
             
@@ -237,9 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemWidth = item.offsetWidth;
             const itemLeft = item.offsetLeft;
             
-            // Center the item in the viewport
-            const centerOffset = (gridWidth - itemWidth) / 2;
-            return itemLeft - centerOffset;
+            // Center the item
+            return itemLeft - (gridWidth - itemWidth) / 2;
         }
         
         // Update which dot is active
@@ -247,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const normalizedIndex = ((index % totalProjects) + totalProjects) % totalProjects;
             dots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === normalizedIndex);
+                dot.setAttribute('aria-current', i === normalizedIndex ? 'true' : 'false');
             });
         }
         
@@ -255,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const gridRect = projectsGrid.getBoundingClientRect();
             const centerX = gridRect.left + gridRect.width / 2;
             
-            let closestIndex = 0;
+            let closestIndex = totalProjects;
             let minDistance = Infinity;
             
             allItems.forEach((item, index) => {
@@ -272,70 +277,124 @@ document.addEventListener('DOMContentLoaded', () => {
             return closestIndex;
         }
         
-        // Go to a specific slide with animation
-        function goToSlide(index, smooth = true) {
+        // Smooth scroll with requestAnimationFrame for better mobile performance
+        function smoothScrollTo(targetScroll, duration = ANIMATION_DURATION) {
+            const startScroll = projectsGrid.scrollLeft;
+            const distance = targetScroll - startScroll;
+            const startTime = performance.now();
+            
+            function easeOutCubic(t) {
+                return 1 - Math.pow(1 - t, 3);
+            }
+            
+            function animateScroll(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                projectsGrid.scrollLeft = startScroll + distance * easeOutCubic(progress);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateScroll);
+                } else {
+                    isAnimating = false;
+                    checkInfiniteLoop();
+                }
+            }
+            
+            isAnimating = true;
+            requestAnimationFrame(animateScroll);
+        }
+        
+        // Check and handle infinite loop jump
+        function checkInfiniteLoop() {
+            const centeredIndex = getCurrentCenteredIndex();
+            const isOnCloneBefore = centeredIndex < totalProjects;
+            const isOnCloneAfter = centeredIndex >= totalProjects * 2;
+            
+            if (isOnCloneBefore || isOnCloneAfter) {
+                const originalIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
+                projectsGrid.style.scrollBehavior = 'auto';
+                projectsGrid.scrollLeft = getScrollPosition(originalIndex);
+                currentIndex = originalIndex;
+            }
+        }
+        
+        // Go to a specific slide
+        function goToSlide(index, animate = true) {
             if (isAnimating) return;
             
-            currentIndex = index;
-            const scrollPos = getScrollPosition(index);
+            currentIndex = ((index % totalProjects) + totalProjects) % totalProjects;
+            const scrollPos = getScrollPosition(currentIndex);
             
-            projectsGrid.style.scrollBehavior = smooth ? 'smooth' : 'auto';
-            projectsGrid.scrollLeft = scrollPos;
+            updateDots(currentIndex);
             
-            updateDots(index);
+            if (animate) {
+                smoothScrollTo(scrollPos);
+            } else {
+                projectsGrid.style.scrollBehavior = 'auto';
+                projectsGrid.scrollLeft = scrollPos;
+            }
         }
         
         // Move to next slide
         function nextSlide() {
             if (isAnimating) return;
-            isAnimating = true;
             
-            currentIndex++;
-            const scrollPos = getScrollPosition(currentIndex);
+            const centeredIndex = getCurrentCenteredIndex();
+            const targetIndex = centeredIndex + 1;
+            const item = allItems[targetIndex];
             
-            projectsGrid.style.scrollBehavior = 'smooth';
-            projectsGrid.scrollLeft = scrollPos;
+            if (!item) return;
             
+            const gridWidth = projectsGrid.offsetWidth;
+            const itemWidth = item.offsetWidth;
+            const targetScroll = item.offsetLeft - (gridWidth - itemWidth) / 2;
+            
+            currentIndex = ((targetIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
             updateDots(currentIndex);
-            
-            // Check if we need to loop back
-            setTimeout(() => {
-                if (currentIndex >= totalProjects) {
-                    currentIndex = 0;
-                    projectsGrid.style.scrollBehavior = 'auto';
-                    projectsGrid.scrollLeft = getScrollPosition(0);
-                }
-                isAnimating = false;
-            }, ANIMATION_DELAY);
+            smoothScrollTo(targetScroll);
         }
         
         // Move to previous slide
         function prevSlide() {
             if (isAnimating) return;
-            isAnimating = true;
             
-            currentIndex--;
-            const scrollPos = getScrollPosition(currentIndex);
+            const centeredIndex = getCurrentCenteredIndex();
+            const targetIndex = centeredIndex - 1;
+            const item = allItems[targetIndex];
             
-            projectsGrid.style.scrollBehavior = 'smooth';
-            projectsGrid.scrollLeft = scrollPos;
+            if (!item) return;
             
+            const gridWidth = projectsGrid.offsetWidth;
+            const itemWidth = item.offsetWidth;
+            const targetScroll = item.offsetLeft - (gridWidth - itemWidth) / 2;
+            
+            currentIndex = ((targetIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
             updateDots(currentIndex);
+            smoothScrollTo(targetScroll);
+        }
+        
+        // Snap to the nearest slide
+        function snapToNearestSlide() {
+            if (isAnimating) return;
             
-            // Check if we need to loop back
-            setTimeout(() => {
-                if (currentIndex < 0) {
-                    currentIndex = totalProjects - 1;
-                    projectsGrid.style.scrollBehavior = 'auto';
-                    projectsGrid.scrollLeft = getScrollPosition(totalProjects - 1);
-                }
-                isAnimating = false;
-            }, ANIMATION_DELAY);
+            const centeredIndex = getCurrentCenteredIndex();
+            const item = allItems[centeredIndex];
+            
+            if (!item) return;
+            
+            const gridWidth = projectsGrid.offsetWidth;
+            const itemWidth = item.offsetWidth;
+            const targetScroll = item.offsetLeft - (gridWidth - itemWidth) / 2;
+            
+            currentIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
+            updateDots(currentIndex);
+            smoothScrollTo(targetScroll, 200);
         }
         
         // Autoplay functions
         function updateProgress() {
-            if (isPaused || isAnimating) return;
+            if (isPaused || isAnimating || isUserInteracting) return;
             
             progress += (PROGRESS_STEP / AUTOPLAY_DURATION) * 100;
             if (progressBar) progressBar.style.width = `${Math.min(progress, 100)}%`;
@@ -383,48 +442,37 @@ document.addEventListener('DOMContentLoaded', () => {
         prevBtn?.addEventListener('click', () => { prevSlide(); resetAutoplay(); });
         nextBtn?.addEventListener('click', () => { nextSlide(); resetAutoplay(); });
         
-        // Handle scroll end to sync dots and handle infinite loop
-        let scrollEndTimer;
-        projectsGrid.addEventListener('scroll', () => {
-            clearTimeout(scrollEndTimer);
-            
-            scrollEndTimer = setTimeout(() => {
-                if (isAnimating) return;
-                
-                const centeredIndex = getCurrentCenteredIndex();
-                const originalIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
-                
-                // Check if we're on a clone
-                const isOnCloneBefore = centeredIndex < totalProjects;
-                const isOnCloneAfter = centeredIndex >= totalProjects * 2;
-                
-                if (isOnCloneBefore || isOnCloneAfter) {
-                    // Jump to the real item instantly
-                    isAnimating = true;
-                    projectsGrid.style.scrollBehavior = 'auto';
-                    projectsGrid.scrollLeft = getScrollPosition(originalIndex);
-                    currentIndex = originalIndex;
-                    updateDots(currentIndex);
-                    setTimeout(() => { isAnimating = false; }, 50);
-                } else {
-                    currentIndex = originalIndex;
-                    updateDots(currentIndex);
-                }
-            }, 150);
-        }, { passive: true });
-        
-        // Touch handling for mobile
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let isTouching = false;
-        let isHorizontalSwipe = null;
+        // Touch handling for mobile with improved gesture detection
+        let touchState = {
+            startX: 0,
+            startY: 0,
+            startTime: 0,
+            startScrollLeft: 0,
+            isDragging: false,
+            isHorizontal: null,
+            velocityX: 0,
+            lastX: 0,
+            lastTime: 0
+        };
         
         projectsGrid.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            isTouching = true;
-            isHorizontalSwipe = null;
-            pauseAutoplay();
+            if (isAnimating) return;
+            
+            const touch = e.touches[0];
+            touchState = {
+                startX: touch.clientX,
+                startY: touch.clientY,
+                startTime: performance.now(),
+                startScrollLeft: projectsGrid.scrollLeft,
+                isDragging: true,
+                isHorizontal: null,
+                velocityX: 0,
+                lastX: touch.clientX,
+                lastTime: performance.now()
+            };
+            
+            isUserInteracting = true;
+            stopAutoplay();
             
             // Hide swipe hint on first touch
             if (swipeHint) {
@@ -434,40 +482,143 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: true });
         
         projectsGrid.addEventListener('touchmove', (e) => {
-            if (!isTouching || isHorizontalSwipe !== null) return;
+            if (!touchState.isDragging) return;
             
-            const diffX = Math.abs(e.touches[0].clientX - touchStartX);
-            const diffY = Math.abs(e.touches[0].clientY - touchStartY);
+            const touch = e.touches[0];
+            const diffX = touch.clientX - touchState.startX;
+            const diffY = touch.clientY - touchState.startY;
+            const currentTime = performance.now();
             
-            // Determine if horizontal or vertical swipe
-            if (diffX > 10 || diffY > 10) {
-                isHorizontalSwipe = diffX > diffY;
+            // Determine swipe direction on first significant movement
+            if (touchState.isHorizontal === null && (Math.abs(diffX) > 10 || Math.abs(diffY) > 10)) {
+                touchState.isHorizontal = Math.abs(diffX) > Math.abs(diffY);
             }
+            
+            // Calculate velocity for momentum
+            const timeDelta = currentTime - touchState.lastTime;
+            if (timeDelta > 0) {
+                touchState.velocityX = (touch.clientX - touchState.lastX) / timeDelta;
+            }
+            touchState.lastX = touch.clientX;
+            touchState.lastTime = currentTime;
+            
         }, { passive: true });
         
         projectsGrid.addEventListener('touchend', (e) => {
-            if (!isTouching) return;
-            isTouching = false;
+            if (!touchState.isDragging) return;
             
-            const touchEndX = e.changedTouches[0].clientX;
-            const diff = touchStartX - touchEndX;
+            const touch = e.changedTouches[0];
+            const diffX = touch.clientX - touchState.startX;
+            const duration = performance.now() - touchState.startTime;
+            const velocity = Math.abs(touchState.velocityX);
             
-            // Only handle horizontal swipes
-            if (isHorizontalSwipe && Math.abs(diff) > 40) {
-                if (diff > 0) {
-                    nextSlide();
+            touchState.isDragging = false;
+            isUserInteracting = false;
+            
+            // Determine action based on swipe distance and velocity
+            if (touchState.isHorizontal) {
+                const shouldSwipe = Math.abs(diffX) > SWIPE_THRESHOLD || velocity > SWIPE_VELOCITY_THRESHOLD;
+                
+                if (shouldSwipe) {
+                    if (diffX < 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
                 } else {
-                    prevSlide();
+                    // Snap to nearest slide
+                    snapToNearestSlide();
                 }
             } else {
-                // Snap to nearest slide if no significant swipe
-                const centeredIndex = getCurrentCenteredIndex();
-                const originalIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
-                goToSlide(originalIndex, true);
+                // Snap to nearest if it was a vertical scroll or tap
+                snapToNearestSlide();
             }
             
-            setTimeout(resumeAutoplay, 2000);
+            // Resume autoplay after a delay (respects isPaused state)
+            setTimeout(() => {
+                if (!isUserInteracting && !isPaused) {
+                    startAutoplay();
+                }
+            }, 2000);
         }, { passive: true });
+        
+        // Handle scroll end for mouse/trackpad users and sync state
+        let scrollEndTimer;
+        let lastScrollLeft = 0;
+        
+        projectsGrid.addEventListener('scroll', () => {
+            clearTimeout(scrollEndTimer);
+            
+            // Detect if user is manually scrolling (not from our animation)
+            if (!isAnimating) {
+                const scrollDiff = Math.abs(projectsGrid.scrollLeft - lastScrollLeft);
+                if (scrollDiff > 5) {
+                    isUserInteracting = true;
+                    stopAutoplay();
+                }
+            }
+            lastScrollLeft = projectsGrid.scrollLeft;
+            
+            scrollEndTimer = setTimeout(() => {
+                if (!isAnimating && !touchState.isDragging) {
+                    // Update dots based on current position
+                    const centeredIndex = getCurrentCenteredIndex();
+                    const originalIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
+                    
+                    if (currentIndex !== originalIndex) {
+                        currentIndex = originalIndex;
+                        updateDots(currentIndex);
+                    }
+                    
+                    // Snap to center and handle infinite loop
+                    snapToNearestSlide();
+                    
+                    isUserInteracting = false;
+                    
+                    // Resume autoplay after scroll ends
+                    setTimeout(() => {
+                        if (!isPaused && !isUserInteracting) {
+                            startAutoplay();
+                        }
+                    }, 1000);
+                }
+            }, 150);
+        }, { passive: true });
+        
+        // Mouse drag support for desktop
+        let mouseState = { isDragging: false, startX: 0, scrollLeft: 0 };
+        
+        projectsGrid.addEventListener('mousedown', (e) => {
+            if (isTouchDevice()) return;
+            mouseState.isDragging = true;
+            mouseState.startX = e.pageX - projectsGrid.offsetLeft;
+            mouseState.scrollLeft = projectsGrid.scrollLeft;
+            projectsGrid.style.cursor = 'grabbing';
+            isUserInteracting = true;
+            stopAutoplay();
+        });
+        
+        projectsGrid.addEventListener('mouseup', () => {
+            if (mouseState.isDragging) {
+                mouseState.isDragging = false;
+                projectsGrid.style.cursor = 'grab';
+                isUserInteracting = false;
+                snapToNearestSlide();
+                setTimeout(() => {
+                    if (!isPaused && !isUserInteracting) {
+                        startAutoplay();
+                    }
+                }, 1000);
+            }
+        });
+        
+        projectsGrid.addEventListener('mousemove', (e) => {
+            if (!mouseState.isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - projectsGrid.offsetLeft;
+            const walk = (x - mouseState.startX) * 1.5;
+            projectsGrid.scrollLeft = mouseState.scrollLeft - walk;
+        });
         
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
@@ -477,51 +628,99 @@ document.addEventListener('DOMContentLoaded', () => {
             const rect = projectsSection.getBoundingClientRect();
             const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
             
-            if (isVisible) {
+            if (isVisible && !isAnimating) {
                 if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
                     prevSlide();
                     resetAutoplay();
                 } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
                     nextSlide();
                     resetAutoplay();
                 }
             }
         });
         
+        // Pause on hover and handle mouse interactions (desktop only)
+        if (!isTouchDevice()) {
+            projectsGrid.style.cursor = 'grab';
+            
+            projectsGrid.addEventListener('mouseenter', () => {
+                isUserInteracting = true;
+                stopAutoplay();
+            });
+            
+            projectsGrid.addEventListener('mouseleave', () => {
+                // Handle both dragging end and hover end
+                if (mouseState.isDragging) {
+                    mouseState.isDragging = false;
+                    projectsGrid.style.cursor = 'grab';
+                    snapToNearestSlide();
+                }
+                isUserInteracting = false;
+                setTimeout(() => {
+                    if (!isUserInteracting && !isPaused) {
+                        startAutoplay();
+                    }
+                }, 500);
+            });
+        }
+        
         // Initialize carousel
         function init() {
             projectsGrid.style.scrollBehavior = 'auto';
             projectsGrid.scrollLeft = getScrollPosition(0);
+            currentIndex = 0;
             updateDots(0);
             
             // Start autoplay after a brief delay
-            setTimeout(startAutoplay, 500);
+            setTimeout(startAutoplay, 1000);
         }
         
-        // Wait for layout
+        // Wait for layout to be ready
         if (document.readyState === 'complete') {
-            setTimeout(init, 100);
+            requestAnimationFrame(() => setTimeout(init, 50));
         } else {
-            window.addEventListener('load', () => setTimeout(init, 100));
+            window.addEventListener('load', () => requestAnimationFrame(() => setTimeout(init, 50)));
         }
         
-        // Handle resize
+        // Handle resize - debounced
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
+            stopAutoplay();
+            
             resizeTimer = setTimeout(() => {
                 projectsGrid.style.scrollBehavior = 'auto';
                 projectsGrid.scrollLeft = getScrollPosition(currentIndex);
-            }, 200);
+                if (!isPaused) {
+                    startAutoplay();
+                }
+            }, 250);
         });
         
         // Pause when tab is hidden
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 stopAutoplay();
-            } else if (!isPaused) {
+            } else if (!isPaused && !isUserInteracting) {
                 startAutoplay();
             }
         });
+        
+        // Intersection observer to pause when not visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (!isPaused && !isUserInteracting) {
+                        startAutoplay();
+                    }
+                } else {
+                    stopAutoplay();
+                }
+            });
+        }, { threshold: 0.3 });
+        
+        observer.observe(projectsGrid);
     }
 });
