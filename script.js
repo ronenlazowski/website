@@ -196,6 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we're on a touch device
         const isTouchDevice = () => 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         
+        // Check if we're on mobile (narrow screen)
+        const isMobile = () => window.innerWidth <= 768;
+        
         // Clone items for infinite scroll
         for (let i = totalProjects - 1; i >= 0; i--) {
             const clone = originalItems[i].cloneNode(true);
@@ -456,8 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         projectsGrid.addEventListener('touchstart', (e) => {
-            if (isAnimating) return;
-            
             const touch = e.touches[0];
             touchState = {
                 startX: touch.clientX,
@@ -507,13 +508,32 @@ document.addEventListener('DOMContentLoaded', () => {
         projectsGrid.addEventListener('touchend', (e) => {
             if (!touchState.isDragging) return;
             
-            const touch = e.changedTouches[0];
-            const diffX = touch.clientX - touchState.startX;
-            const duration = performance.now() - touchState.startTime;
-            const velocity = Math.abs(touchState.velocityX);
-            
             touchState.isDragging = false;
             isUserInteracting = false;
+            
+            // On mobile, rely on native scroll-snap - just update dots after scroll settles
+            if (isMobile()) {
+                setTimeout(() => {
+                    const centeredIndex = getCurrentCenteredIndex();
+                    const originalIndex = ((centeredIndex - totalProjects) % totalProjects + totalProjects) % totalProjects;
+                    currentIndex = originalIndex;
+                    updateDots(currentIndex);
+                    checkInfiniteLoop();
+                    
+                    // Resume autoplay after a delay
+                    setTimeout(() => {
+                        if (!isUserInteracting && !isPaused) {
+                            startAutoplay();
+                        }
+                    }, 2000);
+                }, 150);
+                return;
+            }
+            
+            // Desktop touch behavior
+            const touch = e.changedTouches[0];
+            const diffX = touch.clientX - touchState.startX;
+            const velocity = Math.abs(touchState.velocityX);
             
             // Determine action based on swipe distance and velocity
             if (touchState.isHorizontal) {
@@ -570,8 +590,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         updateDots(currentIndex);
                     }
                     
-                    // Snap to center and handle infinite loop
-                    snapToNearestSlide();
+                    // On mobile, don't fight with scroll-snap, just handle infinite loop
+                    if (isMobile()) {
+                        checkInfiniteLoop();
+                    } else {
+                        // Snap to center and handle infinite loop on desktop
+                        snapToNearestSlide();
+                    }
                     
                     isUserInteracting = false;
                     
@@ -641,35 +666,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Pause on hover and handle mouse interactions (desktop only)
+        // Set grab cursor and handle mouse leaving while dragging (desktop only)
         if (!isTouchDevice()) {
             projectsGrid.style.cursor = 'grab';
             
-            projectsGrid.addEventListener('mouseenter', () => {
-                isUserInteracting = true;
-                stopAutoplay();
-            });
-            
             projectsGrid.addEventListener('mouseleave', () => {
-                // Handle both dragging end and hover end
+                // Handle dragging end when mouse leaves
                 if (mouseState.isDragging) {
                     mouseState.isDragging = false;
                     projectsGrid.style.cursor = 'grab';
                     snapToNearestSlide();
+                    isUserInteracting = false;
+                    setTimeout(() => {
+                        if (!isPaused && !isUserInteracting) {
+                            startAutoplay();
+                        }
+                    }, 500);
                 }
-                isUserInteracting = false;
-                setTimeout(() => {
-                    if (!isUserInteracting && !isPaused) {
-                        startAutoplay();
-                    }
-                }, 500);
             });
         }
         
         // Initialize carousel
         function init() {
             projectsGrid.style.scrollBehavior = 'auto';
-            projectsGrid.scrollLeft = getScrollPosition(0);
+            
+            // On mobile, just scroll to first item without complex positioning
+            if (isMobile()) {
+                // Scroll to show the first original item (after clones)
+                const firstOriginalItem = allItems[totalProjects];
+                if (firstOriginalItem) {
+                    projectsGrid.scrollLeft = firstOriginalItem.offsetLeft - 16; // Account for padding
+                }
+            } else {
+                projectsGrid.scrollLeft = getScrollPosition(0);
+            }
+            
             currentIndex = 0;
             updateDots(0);
             
@@ -686,13 +717,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Handle resize - debounced
         let resizeTimer;
+        let wasDesktop = !isMobile();
+        
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             stopAutoplay();
             
             resizeTimer = setTimeout(() => {
+                const isNowMobile = isMobile();
+                const layoutChanged = wasDesktop === isNowMobile;
+                wasDesktop = !isNowMobile;
+                
                 projectsGrid.style.scrollBehavior = 'auto';
-                projectsGrid.scrollLeft = getScrollPosition(currentIndex);
+                
+                if (isNowMobile) {
+                    // On mobile, scroll to current item simply
+                    const targetItem = allItems[currentIndex + totalProjects];
+                    if (targetItem) {
+                        projectsGrid.scrollLeft = targetItem.offsetLeft - 16;
+                    }
+                } else {
+                    projectsGrid.scrollLeft = getScrollPosition(currentIndex);
+                }
+                
                 if (!isPaused) {
                     startAutoplay();
                 }

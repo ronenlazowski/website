@@ -1225,7 +1225,9 @@ footer{
     line-height:1.6;
     margin-bottom:1rem;
     font-size:0.9rem;
-    flex-grow:1
+    flex-grow:1;
+    line-clamp:3;
+    -webkit-line-clamp:3
 }
 .project-tech{
     display:flex;
@@ -2520,11 +2522,10 @@ body.light-mode #discord-status-mini:hover{
     .projects-carousel{
         flex-direction:column;
         gap:0.5rem;
-        margin-top:1.5rem;
+        margin-top:1rem;
         overflow:visible;
         padding:0;
-        max-width:100%;
-        touch-action:pan-y pinch-zoom
+        max-width:100%
     }
     .projects-carousel::before,
     .projects-carousel::after{
@@ -2534,48 +2535,64 @@ body.light-mode #discord-status-mini:hover{
         display:none
     }
     .carousel-progress{
-        top:-1rem;
-        width:120px;
+        top:-0.75rem;
+        width:100px;
         height:2px
     }
     .projects-grid{
         display:flex;
         flex-direction:row;
-        gap:1rem;
-        padding:1rem 2rem;
-        overflow-x:auto;
+        gap:0.75rem;
+        padding:0.75rem 1rem;
+        overflow-x:scroll;
         overflow-y:hidden;
         -webkit-overflow-scrolling:touch;
         margin:0;
         mask-image:none;
         -webkit-mask-image:none;
         scroll-behavior:auto;
-        touch-action:pan-x pan-y;
+        scroll-snap-type:x mandatory;
         overscroll-behavior-x:contain
     }
     .project-item{
-        flex:0 0 85vw;
-        max-width:320px;
-        min-width:280px;
-        padding:1.5rem;
+        flex:0 0 70vw;
+        max-width:280px;
+        min-width:220px;
+        padding:1.25rem;
         transform:none;
-        transition:transform 0.2s ease, box-shadow 0.2s ease
+        transition:box-shadow 0.2s ease;
+        scroll-snap-align:center
     }
     .project-item:hover{
         transform:none;
-        box-shadow:0 10px 20px rgba(0,0,0,0.2)
+        box-shadow:0 8px 16px rgba(0,0,0,0.15)
     }
     .project-header{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:0.75rem
+        flex-direction:row;
+        align-items:center;
+        gap:0.5rem;
+        margin-bottom:0.75rem
     }
     .project-icon{
-        width:40px;
-        height:40px
+        width:36px;
+        height:36px
     }
     .project-title{
-        font-size:1.1rem
+        font-size:1rem
+    }
+    .project-description{
+        font-size:0.85rem;
+        line-height:1.5;
+        margin-bottom:0.75rem;
+        line-clamp:3;
+        -webkit-line-clamp:3;
+        display:-webkit-box;
+        -webkit-box-orient:vertical;
+        overflow:hidden
+    }
+    .project-tech{
+        gap:0.35rem;
+        margin-bottom:0.75rem
     }
     .section-label{
         font-size:0.7rem;
@@ -2585,11 +2602,13 @@ body.light-mode #discord-status-mini:hover{
         font-size:2rem
     }
     .project-links{
-        flex-direction:column
+        flex-direction:row;
+        gap:0.5rem
     }
     .project-link{
-        flex:none;
-        width:100%
+        flex:1;
+        padding:0.5rem 0.75rem;
+        font-size:0.75rem
     }
     .tech-badge{
         font-size:0.7rem;
@@ -2598,44 +2617,43 @@ body.light-mode #discord-status-mini:hover{
     .carousel-dots{
         display:flex;
         justify-content:center;
-        gap:1rem;
-        margin-top:1.25rem;
-        padding:0.75rem 1.5rem;
-        background:rgba(var(--accent-rgb),0.08);
-        border-radius:2rem;
-        backdrop-filter:blur(10px)
+        gap:0.6rem;
+        margin-top:0.75rem;
+        padding:0.5rem 1rem;
+        background:transparent;
+        border-radius:2rem
     }
     .carousel-dot{
-        width:14px;
-        height:14px;
-        border:2px solid rgba(var(--accent-rgb),0.4);
+        width:10px;
+        height:10px;
+        border:2px solid var(--border-color);
         transition:all 0.3s cubic-bezier(0.4,0,0.2,1)
     }
     .carousel-dot::before{
-        top:-12px;
-        left:-12px;
-        right:-12px;
-        bottom:-12px
+        top:-10px;
+        left:-10px;
+        right:-10px;
+        bottom:-10px
     }
     .carousel-dot::after{
-        top:-4px;
-        left:-4px;
-        right:-4px;
-        bottom:-4px
+        top:-3px;
+        left:-3px;
+        right:-3px;
+        bottom:-3px
     }
     .carousel-dot.active{
-        transform:scale(1.3);
-        background:var(--accent);
-        border-color:var(--accent);
-        box-shadow:0 0 20px rgba(var(--accent-rgb),0.6),0 0 40px rgba(var(--accent-rgb),0.3)
+        transform:scale(1.2);
+        background:var(--accent-color);
+        border-color:var(--accent-color);
+        box-shadow:0 0 10px var(--accent-glow)
     }
     .carousel-dot:not(.active):active{
-        transform:scale(0.85);
-        background:rgba(var(--accent-rgb),0.3);
-        border-color:var(--accent)
+        transform:scale(0.9);
+        background:var(--text-muted);
+        border-color:var(--text-muted)
     }
     .swipe-hint{
-        display:flex
+        display:none
     }
     .projects-header h2{
         font-size:2rem
@@ -3151,10 +3169,41 @@ body.light-mode #discord-status-mini:hover{
         padding:6px !important
     }
     #about,#projects{
-        padding:1.5rem 0.75rem !important
+        padding:1.5rem 0.5rem !important
+    }
+    .projects-grid{
+        padding:0.5rem 0.75rem;
+        gap:0.5rem
     }
     .project-item{
-        padding:1.25rem !important
+        flex:0 0 75vw;
+        max-width:260px;
+        min-width:200px;
+        padding:1rem !important
+    }
+    .project-icon{
+        width:32px;
+        height:32px
+    }
+    .project-title{
+        font-size:0.95rem
+    }
+    .project-description{
+        font-size:0.8rem;
+        line-clamp:2;
+        -webkit-line-clamp:2
+    }
+    .tech-badge{
+        font-size:0.65rem;
+        padding:0.2rem 0.5rem
+    }
+    .carousel-dots{
+        gap:0.5rem;
+        margin-top:0.5rem
+    }
+    .carousel-dot{
+        width:8px;
+        height:8px
     }
 
     #discord-status{
