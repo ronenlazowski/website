@@ -192,7 +192,7 @@
             <h2 class="role-title">
                 <span class="role-highlight shimmer">Tech Enthusiast</span>            </h2>
             <p class="hero-description">
-                I build Linux-first systems, backend automations, Discord bots, and web tools that keep working when no one is watching.
+                I like building tools that make life easier. Whether it's automating tedious tasks, working on my servers, or creating websites that just work.
             </p>
             <div class="cta-buttons" role="group" aria-label="Call to action buttons">
                 <a href="#about" class="btn btn-primary no-uri-change" aria-describedby="discover-journey">
@@ -209,33 +209,36 @@
             </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
-            <div class="code-preview">
+            <div class="code-preview terminal-style">
                 <div class="code-header">
                     <div class="code-dots">
                         <span class="dot red"></span>
                         <span class="dot yellow"></span>
                         <span class="dot green"></span>
                     </div>
-                    <span class="code-title">main.py</span>
+                    <span class="code-title">terminal</span>
                 </div>
                 <div class="code-content">
                     <div class="code-line">
-                        <span class="code-keyword">class</span> <span class="code-class">Developer</span>:
+                        <span class="code-prompt">~</span> <span class="code-command">whoami</span>
+                    </div>
+                    <div class="code-line code-output">
+                        ronen — builder of things that work
                     </div>
                     <div class="code-line">
-                        &nbsp;&nbsp;<span class="code-keyword">def</span> <span class="code-function">__init__</span>(self):
+                        <span class="code-prompt">~</span> <span class="code-command">cat interests.txt</span>
+                    </div>
+                    <div class="code-line code-output">
+                        making ideas real 
+                    </div>
+                    <div class="code-line code-output">
+                        automating the boring stuff
+                    </div>
+                    <div class="code-line code-output">
+                        tinkering with linux
                     </div>
                     <div class="code-line">
-                        &nbsp;&nbsp;&nbsp;&nbsp;self.name = <span class="code-string">"Ronen"</span>
-                    </div>
-                    <div class="code-line">
-                        &nbsp;&nbsp;&nbsp;&nbsp;self.stack = [<span class="code-string">"Linux"</span>, <span class="code-string">"Python"</span>, <span class="code-string">"Automation"</span>]
-                    </div>
-                    <div class="code-line">
-                        &nbsp;&nbsp;&nbsp;&nbsp;self.tinkering = <span class="code-boolean">True</span>
-                    </div>
-                    <div class="code-line">
-                        &nbsp;&nbsp;&nbsp;&nbsp;self.passion = <span class="code-boolean">True</span>
+                        <span class="code-prompt">~</span> <span class="code-cursor">▌</span>
                     </div>
                 </div>
             </div>
@@ -249,23 +252,45 @@
         <h2 id="about-heading">About Me</h2>
         <div class="about-container">
             <div class="about-text">
-                <p>I'm Ronen. I like turning messy, repetitive work into simple automations and Linux-friendly systems that quietly stay up.</p>
+                <p>I'm Ronen. I enjoy taking complicated problems and turning them into simple, reliable solutions that people can actually depend on.</p>
                 
-                <p>I care a lot about the boring stuff: logging, edge cases, and making things easy to debug. Clean, fixable code is my comfort zone.</p>
+                <p>I'm the kind of person who sweats the small details, because that's usually where things break. I like building stuff that's easy to understand and fix.</p>
                 
-                <p>When I'm not coding, I'm usually poking at a homelab setup, contributing to open source, or helping friends troubleshoot their machines.</p>
+                <p>Outside of projects, you'll find me tinkering with side experiments, contributing to open source, or helping friends sort out their tech headaches.</p>
                 
                 <div class="skills">
-                    <h3 id="skills-heading">Technical Skills</h3>
-                    <div class="skill-tags" role="list" aria-labelledby="skills-heading">
-                        <span class="skill-tag" role="listitem">Python</span>
-                        <span class="skill-tag" role="listitem">Backend Development</span>
-                        <span class="skill-tag" role="listitem">Network Engineering</span>
-                        <span class="skill-tag" role="listitem">Automation</span>
-                        <span class="skill-tag" role="listitem">Discord Bots</span>
-                        <span class="skill-tag" role="listitem">Linux Systems</span>
-                        <span class="skill-tag" role="listitem">Server Management</span>
-                        <span class="skill-tag" role="listitem">Web Development</span>
+                    <h3 id="skills-heading">Skills & Expertise</h3>
+                    <div class="skills-grid">
+                        <div class="skill-category">
+                            <h4 id="expertise-heading">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                                </svg>
+                                Technical
+                            </h4>
+                            <div class="skill-tags" role="list" aria-labelledby="expertise-heading">
+                                <span class="skill-tag" role="listitem">Python</span>
+                                <span class="skill-tag" role="listitem">Backend Development</span>
+                                <span class="skill-tag" role="listitem">Web Development</span>
+                                <span class="skill-tag" role="listitem">Server Management</span>
+                                <span class="skill-tag" role="listitem">Automation</span>
+                            </div>
+                        </div>
+                        
+                        <div class="skill-category">
+                            <h4 id="interests-heading">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                Interests
+                            </h4>
+                            <div class="skill-tags" role="list" aria-labelledby="interests-heading">
+                                <span class="skill-tag" role="listitem">Linux</span>
+                                <span class="skill-tag" role="listitem">Open Source</span>
+                                <span class="skill-tag" role="listitem">Programming</span>
+                                <span class="skill-tag" role="listitem">Problem Solving</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
